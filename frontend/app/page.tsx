@@ -12,21 +12,41 @@ export default function Lobby() {
     const socket = getSocket(); // Reuse the singleton WebSocket instance
 
     const handleCreateGame = () => {
-        sendMessage('createGame', { player: playerName });
+      if (!playerName) {
+          alert('Please enter your name');
+          return;
+      }
 
-        socket.on('message', (response) => {
-            if (response.result === 'OK') {
-                router.push(`/waiting-room?gameId=${response.gameId}`);
-            }
-        });
-    };
+      sendMessage('createGame', { player: playerName });
+
+      socket.once('message', (response) => {
+          if (response.result === 'OK') {
+              localStorage.setItem('playerName', playerName); // Save the creator's name
+              localStorage.setItem('joined', 'true'); // Mark as joined
+              localStorage.setItem('players', JSON.stringify(response.players)); // Save initial player list
+              localStorage.setItem('isHost', 'true'); // Mark as host
+              router.push(`/${response.gameId}`);
+          } else {
+              alert('Failed to create game');
+          }
+      });
+  };
 
     const handleJoinGame = () => {
+        if (!playerName || !gameId) {
+            alert('Please enter your name and game ID');
+            return;
+        }
+
         sendMessage('joinGame', { player: playerName, gameId });
 
-        socket.on('message', (response) => {
+        socket.once('message', (response) => {
             if (response.result === 'OK') {
-                router.push(`/waiting-room?gameId=${gameId}`);
+                localStorage.setItem('playerName', playerName); // Save player name
+                localStorage.setItem('joined', 'true'); // Mark as joined
+                router.push(`/${gameId}`);
+            } else {
+                alert(response.message || 'Failed to join game');
             }
         });
     };
@@ -34,20 +54,26 @@ export default function Lobby() {
     return (
         <div>
             <h1>Word Assassins</h1>
-            <input
-                type="text"
-                placeholder="Enter your name"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-            />
-            <button onClick={handleCreateGame}>Create Game</button>
-            <input
-                type="text"
-                placeholder="Enter game ID"
-                value={gameId}
-                onChange={(e) => setGameId(e.target.value)}
-            />
-            <button onClick={handleJoinGame}>Join Game</button>
+            <div>
+                <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                />
+            </div>
+            <div>
+                <button onClick={handleCreateGame}>Create Game</button>
+            </div>
+            <div>
+                <input
+                    type="text"
+                    placeholder="Enter game ID"
+                    value={gameId}
+                    onChange={(e) => setGameId(e.target.value)}
+                />
+                <button onClick={handleJoinGame}>Join Game</button>
+            </div>
         </div>
     );
 }

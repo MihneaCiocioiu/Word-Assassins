@@ -4,7 +4,7 @@ import express from 'express';
 import { Server } from 'socket.io';
 
 const app = express();
-app.use(cors({ origin: 'http://localhost:3000' })); // Allow frontend requests
+app.use(cors({ origin: '*' })); // Allow frontend requests
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -32,19 +32,25 @@ io.on('connection', (socket) => {
 
         if (action === 'createGame') {
             const { player } = payload;
-            const gameId = Math.random().toString(36).substr(2, 5).toUpperCase();
 
+            const gameId = Math.random().toString(36).substr(2, 5).toUpperCase();
             games[gameId] = {
                 gameId,
                 players: [{ name: player, socketId: socket.id }],
                 host: player,
                 started: false,
             };
-
+    
             socket.join(gameId); // Join the game room
-            socket.emit('message', { result: 'OK', gameId });
-            console.log(`Game created with ID: ${gameId}`);
+    
+            // Send the response with the creator's name included
+            socket.emit('message', { 
+                result: 'OK', 
+                gameId, 
+                players: [player] 
+            });
         }
+    
 
         if (action === 'joinGame') {
             const { player, gameId } = payload;
@@ -72,6 +78,51 @@ io.on('connection', (socket) => {
 
             console.log(`Player ${player} joined game ${gameId}`);
         }
+
+        if (action === 'startGame') {
+            const { gameId } = payload;
+
+            const game = games[gameId];
+            if (!game) {
+                socket.emit('message', { result: 'Error', message: 'Game not found' });
+                return;
+            }
+    
+            if (game.host !== data.player) {
+                socket.emit('message', { result: 'Error', message: 'Only the host can start the game' });
+                return;
+            }
+    
+            if (game.players.length < 2) {
+                socket.emit('message', { result: 'Error', message: 'Not enough players to start the game' });
+                return;
+            }
+    
+            // Notify all players about the countdown
+            io.to(gameId).emit('message', { action: 'countdown', countdown: 5 });
+    
+            // Start the game after the countdown
+            setTimeout(() => {
+                const words = ['apple', 'banana', 'cherry', 'dragon', 'elephant'];
+                const shuffledPlayers = game.players.sort(() => Math.random() - 0.5);
+    
+                // Assign targets and words
+                for (let i = 0; i < shuffledPlayers.length; i++) {
+                    const targetIndex = (i + 1) % shuffledPlayers.length;
+                    const target = shuffledPlayers[targetIndex].name;
+                    const word = words[i % words.length];
+    
+                    io.to(shuffledPlayers[i].socketId).emit('message', {
+                        action: 'gameStarted',
+                        target,
+                        word,
+                    });
+                }
+    
+                game.started = true;
+            }, 5000);
+        }
+
     });
 
     socket.on('disconnect', () => {
