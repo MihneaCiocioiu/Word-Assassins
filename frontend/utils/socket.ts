@@ -16,7 +16,7 @@ const getSocket = (): Socket => {
     });
 
     socket.on('connect', () => {
-      console.log('Connected to WebSocket server', socket.id);
+      console.log('Connected to WebSocket server', socket?.id);
     });
 
     socket.on('disconnect', () => {
