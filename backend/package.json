@@ -15,7 +15,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon src/server.ts"
+    "start": "nodemon src/server.ts",
+    "build": "tsc",
+    "startProd": "node dist/server.js"
   },
   "author": "Mihnea Ciocioiu",
   "license": "ISC",
