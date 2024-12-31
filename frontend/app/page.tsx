@@ -51,6 +51,7 @@ export default function Lobby() {
             if (response.result === 'OK') {
                 localStorage.setItem('playerName', playerName); 
                 localStorage.setItem('joined', 'true'); 
+                localStorage.setItem('players', JSON.stringify(response.players));
                 router.push(`/${normalisedGameId}`);
             } else {
                 alert(response.message || 'Failed to join game');
