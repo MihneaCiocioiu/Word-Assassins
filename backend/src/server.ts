@@ -2,6 +2,8 @@ import http from 'http';
 import cors from 'cors';
 import express from 'express';
 import { Server } from 'socket.io';
+import fs from 'fs';
+import path from 'path';
 
 const app = express();
 app.use(cors({ origin: '*' })); // Allow frontend requests
@@ -22,6 +24,11 @@ interface Game {
 }
 
 const games: Record<string, Game> = {};
+
+
+const wordsPath = path.resolve(__dirname, './words.json');
+
+const words = JSON.parse(fs.readFileSync(wordsPath, 'utf8'));
 
 // Socket.io event handlers
 io.on('connection', (socket) => {
@@ -81,20 +88,9 @@ io.on('connection', (socket) => {
 
         if (action === 'startGame') {
             const { gameId } = payload;
-
             const game = games[gameId];
             if (!game) {
                 socket.emit('message', { result: 'Error', message: 'Game not found' });
-                return;
-            }
-    
-            if (game.host !== data.player) {
-                socket.emit('message', { result: 'Error', message: 'Only the host can start the game' });
-                return;
-            }
-    
-            if (game.players.length < 2) {
-                socket.emit('message', { result: 'Error', message: 'Not enough players to start the game' });
                 return;
             }
     
@@ -103,14 +99,19 @@ io.on('connection', (socket) => {
     
             // Start the game after the countdown
             setTimeout(() => {
-                const words = ['apple', 'banana', 'cherry', 'dragon', 'elephant'];
                 const shuffledPlayers = game.players.sort(() => Math.random() - 0.5);
     
                 // Assign targets and words
+                const usedWords = new Set();
                 for (let i = 0; i < shuffledPlayers.length; i++) {
                     const targetIndex = (i + 1) % shuffledPlayers.length;
                     const target = shuffledPlayers[targetIndex].name;
-                    const word = words[i % words.length];
+    
+                    let word;
+                    do {
+                        word = words[Math.floor(Math.random() * words.length)];
+                    } while (usedWords.has(word));
+                    usedWords.add(word);
     
                     io.to(shuffledPlayers[i].socketId).emit('message', {
                         action: 'gameStarted',

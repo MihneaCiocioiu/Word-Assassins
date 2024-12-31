@@ -7,7 +7,6 @@ import PlayerList from '../components/PlayerList';
 
 export default function GamePage() {
     const [players, setPlayers] = useState<string[]>([]);
-    // const [messages, setMessages] = useState<string[]>([]);
     const [playerName, setPlayerName] = useState('');
     const [joined, setJoined] = useState(false);
     const [isHost, setIsHost] = useState(false);
@@ -49,15 +48,15 @@ export default function GamePage() {
                 setPlayerName('');
                 setJoined(false);
             }
-            // if (data.message) {
-            //     setMessages((prev) => [...prev, data.message]); // Append new messages
-            // }
             if (data.action === 'countdown') {
                 setCountdown(data.countdown);
                 const interval = setInterval(() => {
                     setCountdown((prev) => (prev ? prev - 1 : null));
                 }, 1000);
-                setTimeout(() => clearInterval(interval), data.countdown * 1000);
+                setTimeout(() => {
+                    clearInterval(interval);
+                    setCountdown(null); // Clear countdown after it finishes
+                }, data.countdown * 1000);
             }
             if (data.action === 'gameStarted') {
                 setTarget(data.target);
@@ -82,11 +81,11 @@ export default function GamePage() {
 
     return (
         <div className="mainSection">
-            <div className='mainBlock'>
+            <div className="mainBlock">
                 <span>Game ID: {gameId}</span>
             </div>
             {!joined ? (
-                <div>
+                <div className="mainSection">
                     <input
                         type="text"
                         placeholder="Enter your name"
@@ -94,6 +93,10 @@ export default function GamePage() {
                         onChange={(e) => setPlayerName(e.target.value)}
                     />
                     <button onClick={() => {
+                        if (!playerName) {
+                            alert('Please enter your name');
+                            return;
+                        }
                         sendMessage('joinGame', { player: playerName, gameId });
                         localStorage.setItem('joined', 'true');
                         setJoined(true);
@@ -103,24 +106,32 @@ export default function GamePage() {
                 </div>
             ) : (
                 <>
-                    <PlayerList players={players} />
-                    {isHost && !countdown && !target && (
-                        <button onClick={handleStartGame}>Start Game</button>
-                    )}
-                    {countdown && (
-                        <h2>Game starting in {countdown}...</h2>
-                    )}
-                    {target && word && (
+                    {/* Show only the player list and Start Game button before the countdown starts */}
+                    {!countdown && !target && !word && (
                         <>
-                            <h2>Your Target: {target}</h2>
-                            <h2>Your Word: {word}</h2>
+                            <PlayerList players={players} />
+                            {isHost && (
+                                <button onClick={handleStartGame}>Start Game</button>
+                            )}
                         </>
                     )}
-                    {/* <ul>
-                        {messages.map((message, index) => (
-                            <li key={index}>{message}</li>
-                        ))}
-                    </ul> */}
+
+                    {/* Show only the countdown while it is active */}
+                    {countdown && (
+                        <span className="countdown">Game starting in {countdown}...</span>
+                    )}
+
+                    {/* Show only the target and word after the countdown */}
+                    {!countdown && target && word && (
+                        <div className="secondaryBlock">
+                            <div className='mainBlock'>
+                                <div className='normalText'>Your Target: <span>{target}</span></div>
+                            </div>
+                            <div className='mainBlock'>
+                                <div className='normalText'>Your Word: <span>{word}</span></div>
+                            </div>
+                        </div>
+                    )}
                 </>
             )}
         </div>

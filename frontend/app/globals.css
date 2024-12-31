@@ -12,7 +12,7 @@ main {
 
 
 .mainSection {
-  @apply flex flex-col items-center my-2
+  @apply flex flex-col items-center my-2 w-full
 }
 
 span {
@@ -42,4 +42,8 @@ ul {
 li {
   @apply bg-primary px-4 py-3 my-2 rounded-xl text-xl text-text 
 
+}
+
+.normalText {
+  @apply text-xl text-text font-medium
 }
