@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import getSocket, { sendMessage } from '../utils/socket';
 
@@ -10,28 +10,32 @@ export default function Lobby() {
     const router = useRouter();
 
     const socket = getSocket(); // Reuse the singleton WebSocket instance
-    localStorage.clear(); // Clear any previous game data
+
+    // Clear localStorage or do any "client only" tasks inside useEffect
+    useEffect(() => {
+        localStorage.clear(); // Clear any previous game data
+    }, []);
 
     const handleCreateGame = () => {
-      if (!playerName) {
-          alert('Please enter your name');
-          return;
-      }
+        if (!playerName) {
+            alert('Please enter your name');
+            return;
+        }
 
-      sendMessage('createGame', { player: playerName });
+        sendMessage('createGame', { player: playerName });
 
-      socket.once('message', (response) => {
-          if (response.result === 'OK') {
-              localStorage.setItem('playerName', playerName); // Save the creator's name
-              localStorage.setItem('joined', 'true'); // Mark as joined
-              localStorage.setItem('players', JSON.stringify(response.players)); // Save initial player list
-              localStorage.setItem('isHost', 'true'); // Mark as host
-              router.push(`/${response.gameId}`);
-          } else {
-              alert('Failed to create game');
-          }
-      });
-  };
+        socket.once('message', (response) => {
+            if (response.result === 'OK') {
+                localStorage.setItem('playerName', playerName); // Save the creator's name
+                localStorage.setItem('joined', 'true');         // Mark as joined
+                localStorage.setItem('players', JSON.stringify(response.players));
+                localStorage.setItem('isHost', 'true');         // Mark as host
+                router.push(`/${response.gameId}`);
+            } else {
+                alert('Failed to create game');
+            }
+        });
+    };
 
     const handleJoinGame = () => {
         if (!playerName || !gameId) {
@@ -45,8 +49,8 @@ export default function Lobby() {
 
         socket.once('message', (response) => {
             if (response.result === 'OK') {
-                localStorage.setItem('playerName', playerName); // Save player name
-                localStorage.setItem('joined', 'true'); // Mark as joined
+                localStorage.setItem('playerName', playerName); 
+                localStorage.setItem('joined', 'true'); 
                 router.push(`/${normalisedGameId}`);
             } else {
                 alert(response.message || 'Failed to join game');
@@ -63,7 +67,9 @@ export default function Lobby() {
                 onChange={(e) => setPlayerName(e.target.value)}
             />
 
-            <button className='secondary-button' onClick={handleCreateGame}>Create Game</button>
+            <button className='secondary-button' onClick={handleCreateGame}>
+                Create Game
+            </button>
 
             <input
                 type="text"
@@ -72,7 +78,9 @@ export default function Lobby() {
                 onChange={(e) => setGameId(e.target.value)}
             />
 
-            <button onClick={handleJoinGame}>Join Game</button>
+            <button onClick={handleJoinGame}>
+                Join Game
+            </button>
         </div>
     );
 }
