@@ -7,7 +7,7 @@ import PlayerList from '../components/PlayerList';
 
 export default function GamePage() {
     const [players, setPlayers] = useState<string[]>([]);
-    const [messages, setMessages] = useState<string[]>([]);
+    // const [messages, setMessages] = useState<string[]>([]);
     const [playerName, setPlayerName] = useState('');
     const [joined, setJoined] = useState(false);
     const [isHost, setIsHost] = useState(false);
@@ -49,9 +49,9 @@ export default function GamePage() {
                 setPlayerName('');
                 setJoined(false);
             }
-            if (data.message) {
-                setMessages((prev) => [...prev, data.message]); // Append new messages
-            }
+            // if (data.message) {
+            //     setMessages((prev) => [...prev, data.message]); // Append new messages
+            // }
             if (data.action === 'countdown') {
                 setCountdown(data.countdown);
                 const interval = setInterval(() => {
@@ -81,8 +81,10 @@ export default function GamePage() {
     };
 
     return (
-        <div>
-            <h1>Game ID: {gameId}</h1>
+        <div className="mainSection">
+            <div className='mainBlock'>
+                <span>Game ID: {gameId}</span>
+            </div>
             {!joined ? (
                 <div>
                     <input
@@ -114,11 +116,11 @@ export default function GamePage() {
                             <h2>Your Word: {word}</h2>
                         </>
                     )}
-                    <ul>
+                    {/* <ul>
                         {messages.map((message, index) => (
                             <li key={index}>{message}</li>
                         ))}
-                    </ul>
+                    </ul> */}
                 </>
             )}
         </div>

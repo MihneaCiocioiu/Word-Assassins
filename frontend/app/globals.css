@@ -1,17 +1,45 @@
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f4;
+  @apply bg-background text-text font-sans;
 }
 
 header {
-  background-color: #333;
-  color: #fff;
-  padding: 10px 20px;
-  text-align: center;
+  @apply bg-primary text-white p-4 text-center;
 }
 
 main {
-  padding: 20px;
+}
+
+
+
+.mainSection {
+  @apply flex flex-col items-center my-2
+}
+
+span {
+  @apply text-2xl font-bold;
+}
+
+.mainBlock {
+  @apply bg-primary text-text py-5 px-4 m-3 rounded-xl flex-auto w-10/12;
+}
+
+.secondaryBlock {
+  @apply bg-secondary text-text py-5 px-4 m-3 rounded-xl flex-auto w-10/12;
+}
+
+input {
+  @apply bg-secondary text-text py-4 p-2 m-2 rounded-lg w-10/12 border-0;
+}
+
+button {
+  @apply bg-primary text-text text-xl font-bold py-6 m-3 rounded-xl w-11/12 border-0;
+}
+
+ul {
+  @apply list-none p-0 m-0
+}
+
+li {
+  @apply bg-primary px-4 py-3 my-2 rounded-xl text-xl text-text 
+
 }

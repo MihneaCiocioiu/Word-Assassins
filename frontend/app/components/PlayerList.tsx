@@ -6,8 +6,8 @@ interface PlayerListProps {
 
 const PlayerList: React.FC<PlayerListProps> = ({ players }) => {
     return (
-        <div>
-            <h2>Players in the Game:</h2>
+        <div className='secondaryBlock'>
+            <span>Players in the Game:</span>
             {players.length === 0 ? (
                 <p>No players yet.</p>
             ) : (

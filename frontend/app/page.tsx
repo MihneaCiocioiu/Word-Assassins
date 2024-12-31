@@ -52,28 +52,24 @@ export default function Lobby() {
     };
 
     return (
-        <div>
-            <h1>Word Assassins</h1>
-            <div>
-                <input
-                    type="text"
-                    placeholder="Enter your name"
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                />
-            </div>
-            <div>
-                <button onClick={handleCreateGame}>Create Game</button>
-            </div>
-            <div>
-                <input
-                    type="text"
-                    placeholder="Enter game ID"
-                    value={gameId}
-                    onChange={(e) => setGameId(e.target.value)}
-                />
-                <button onClick={handleJoinGame}>Join Game</button>
-            </div>
+        <div className='mainSection'>
+            <input
+                type="text"
+                placeholder="Enter your name"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+            />
+
+            <button className='secondary-button' onClick={handleCreateGame}>Create Game</button>
+
+            <input
+                type="text"
+                placeholder="Enter game ID"
+                value={gameId}
+                onChange={(e) => setGameId(e.target.value)}
+            />
+
+            <button onClick={handleJoinGame}>Join Game</button>
         </div>
     );
 }
