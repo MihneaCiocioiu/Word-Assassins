@@ -12,8 +12,10 @@ app.use(cors({ origin: '*' })); // Allow frontend requests
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: 'http://localhost:3000',
+        origin: '*',
+        methods: ['GET', 'POST'],
     },
+    allowEIO3: true, // Support older WebSocket clients
 });
 
 type MessageData = {
@@ -150,6 +152,6 @@ io.on('connection', (socket: Socket) => {
     });
 });
 
-server.listen(8080, () => {
-    console.log('Server running on http://localhost:8080');
+server.listen(process.env.PORT || 8080, () => {
+    console.log(`Server running on port ${process.env.PORT || 8080}`);
 });
