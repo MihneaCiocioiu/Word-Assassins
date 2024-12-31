@@ -10,6 +10,7 @@ export default function Lobby() {
     const router = useRouter();
 
     const socket = getSocket(); // Reuse the singleton WebSocket instance
+    localStorage.clear(); // Clear any previous game data
 
     const handleCreateGame = () => {
       if (!playerName) {
@@ -38,13 +39,15 @@ export default function Lobby() {
             return;
         }
 
-        sendMessage('joinGame', { player: playerName, gameId });
+        const normalisedGameId = gameId.trim().toUpperCase(); // Normalize game ID
+
+        sendMessage('joinGame', { player: playerName, gameId: normalisedGameId });
 
         socket.once('message', (response) => {
             if (response.result === 'OK') {
                 localStorage.setItem('playerName', playerName); // Save player name
                 localStorage.setItem('joined', 'true'); // Mark as joined
-                router.push(`/${gameId}`);
+                router.push(`/${normalisedGameId}`);
             } else {
                 alert(response.message || 'Failed to join game');
             }
