@@ -1,10 +1,10 @@
 import http from 'http';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import express from 'express';
-import { Server } from 'socket.io';
 import fs from 'fs';
 import path from 'path';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
+
 
 const app = express();
 app.use(cors({ origin: '*' })); // Allow frontend requests
@@ -15,6 +15,11 @@ const io = new Server(server, {
         origin: 'http://localhost:3000',
     },
 });
+
+type MessageData = {
+    action: string;
+    [key: string]: any; // Flexible key-value pairs for payload
+};
 
 // In-memory storage for games
 interface Game {
@@ -35,7 +40,7 @@ const words = JSON.parse(fs.readFileSync(wordsPath, 'utf8'));
 io.on('connection', (socket: Socket) => {
     console.log('Client connected:', socket.id);
 
-    socket.on('message', (data) => {
+    socket.on('message', (data: MessageData) => {
         const { action, ...payload } = data;
 
         if (action === 'createGame') {
