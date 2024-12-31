@@ -4,6 +4,7 @@ import express from 'express';
 import { Server } from 'socket.io';
 import fs from 'fs';
 import path from 'path';
+import { Socket } from 'socket.io';
 
 const app = express();
 app.use(cors({ origin: '*' })); // Allow frontend requests
@@ -31,7 +32,7 @@ const wordsPath = path.resolve(__dirname, './words.json');
 const words = JSON.parse(fs.readFileSync(wordsPath, 'utf8'));
 
 // Socket.io event handlers
-io.on('connection', (socket) => {
+io.on('connection', (socket: Socket) => {
     console.log('Client connected:', socket.id);
 
     socket.on('message', (data) => {
