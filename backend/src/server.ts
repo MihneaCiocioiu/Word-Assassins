@@ -15,6 +15,7 @@ const io = new Server(server, {
         origin: '*',
         methods: ['GET', 'POST'],
     },
+    transports: ['websocket', 'polling'], // Enable WebSocket and fallback polling
     allowEIO3: true, // Support older WebSocket clients
 });
 
