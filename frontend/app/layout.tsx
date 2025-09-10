@@ -1,4 +1,19 @@
 import './globals.css';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: {
+        default: 'Word Assassins',
+        template: '%s · Word Assassins',
+    },
+    description: 'Real-time party word game: create or join a room and play!',
+    icons: {
+        icon: [
+            { url: '/icon.svg', type: 'image/svg+xml' },
+            { url: '/favicon.ico', sizes: 'any' },
+        ],
+    },
+};
 
 export default function RootLayout({
     children,
