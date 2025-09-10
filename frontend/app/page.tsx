@@ -12,9 +12,9 @@ export default function Lobby() {
 
     const socket = getSocket(); // Reuse the singleton WebSocket instance
 
-    // Clear localStorage or do any "client only" tasks inside useEffect
+    // Previously cleared localStorage here, but that breaks rejoin. Keep data.
     useEffect(() => {
-        localStorage.clear(); // Clear any previous game data
+        // No-op on mount
     }, []);
 
     const handleCreateGame = () => {

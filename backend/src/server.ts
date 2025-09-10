@@ -6,11 +6,14 @@ import path from 'path';
 import { Server, Socket } from 'socket.io';
 
 const INACTIVITY_LIMIT_MS = 5 * 60 * 1000; // e.g. 5 minutes of no activity
-const STARTED_GAME_EXPIRY_MS = 1 * 60 * 1000; // e.g. 1 minute after the game has started
+const STARTED_GAME_EXPIRY_MS = 12 * 60 * 60 * 1000; // 12 hours after the game has started
+const DISCONNECT_GRACE_MS = 30 * 1000; // 30 seconds grace period for reconnection
 
 interface Player {
   name: string;
   socketId: string;
+  connected: boolean;
+  disconnectAt?: number;
 }
 
 interface Game {
@@ -21,6 +24,7 @@ interface Game {
   startTime?: number;    // Timestamp when the game started
   lastActivity: number; // Timestamp of last game-related activity
   language: 'ro' | 'en';
+  assignments?: Record<string, { target: string; word: string }>;
 }
 
 const app = express();
@@ -73,6 +77,26 @@ setInterval(() => {
       });
       delete games[gameId];
     }
+
+    // Remove players who have been disconnected beyond the grace period
+    const toRemove: Player[] = [];
+    game.players.forEach((p) => {
+      if (!p.connected && p.disconnectAt && now - p.disconnectAt >= DISCONNECT_GRACE_MS) {
+        toRemove.push(p);
+      }
+    });
+
+    if (toRemove.length > 0) {
+      toRemove.forEach((p) => {
+        game.players = game.players.filter((gp) => gp.name !== p.name);
+        game.lastActivity = now;
+        io.to(game.gameId).emit('message', {
+          message: `Player ${p.name} left the game`,
+          players: game.players.map((pl) => pl.name),
+        });
+        console.log(`Player ${p.name} removed from game ${game.gameId} after grace period`);
+      });
+    }
   }
 }, 30_000); // Checks every 30s (adjust as needed)
 
@@ -105,11 +129,12 @@ io.on('connection', (socket: Socket) => {
 
       games[gameId] = {
         gameId,
-        players: [{ name: player, socketId: socket.id }],
+        players: [{ name: player, socketId: socket.id, connected: true }],
         host: player,
         started: false,
         lastActivity: Date.now(), // Record first activity
         language: (language === 'en' || language === 'ro') ? language : 'ro',
+        assignments: {},
       };
 
       socket.join(gameId);
@@ -133,13 +158,35 @@ io.on('connection', (socket: Socket) => {
       // Update lastActivity
       game.lastActivity = Date.now();
 
-      // Check if player is already in game
-      if (game.players.some((p) => p.name === player)) {
-        socket.emit('message', { result: 'Error', message: 'Player already in game' });
+      // If player name already exists, treat this as a reconnection/reattach
+      const existing = game.players.find((p) => p.name === player);
+      if (existing) {
+        existing.socketId = socket.id;
+        existing.connected = true;
+        existing.disconnectAt = undefined;
+        socket.join(gameId);
+
+        socket.emit('message', {
+          result: 'OK',
+          message: 'rejoined',
+          players: game.players.map((p) => p.name),
+        });
+
+        // If the game has started, re-send this player's assignment
+        const assignment = game.assignments && game.assignments[player];
+        if (game.started && assignment) {
+          io.to(socket.id).emit('message', {
+            action: 'gameStarted',
+            target: assignment.target,
+            word: assignment.word,
+          });
+        }
+
+        console.log(`Player ${player} rejoined game ${gameId}`);
         return;
       }
 
-      game.players.push({ name: player, socketId: socket.id });
+      game.players.push({ name: player, socketId: socket.id, connected: true });
       socket.join(gameId);
 
       io.to(gameId).emit('message', {
@@ -184,6 +231,7 @@ io.on('connection', (socket: Socket) => {
           const wordList = (game.language && wordsByLanguage[game.language]?.length)
             ? wordsByLanguage[game.language]
             : wordsByLanguage['ro'];
+          game.assignments = {};
           for (let i = 0; i < shuffledPlayers.length; i++) {
             const targetIndex = (i + 1) % shuffledPlayers.length;
             const target = shuffledPlayers[targetIndex].name;
@@ -194,6 +242,9 @@ io.on('connection', (socket: Socket) => {
             } while (usedWords.has(word));
             usedWords.add(word);
       
+            // Persist assignment for reconnection support
+            game.assignments[shuffledPlayers[i].name] = { target, word };
+
             io.to(shuffledPlayers[i].socketId).emit('message', {
               action: 'gameStarted',
               target,
@@ -211,19 +262,14 @@ io.on('connection', (socket: Socket) => {
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
 
-    // Remove player from games
+    // Mark player as temporarily disconnected; do not remove immediately
     Object.values(games).forEach((game) => {
-      const playerIndex = game.players.findIndex((p) => p.socketId === socket.id);
-      if (playerIndex !== -1) {
-        const [removedPlayer] = game.players.splice(playerIndex, 1);
-        // Update lastActivity
+      const player = game.players.find((p) => p.socketId === socket.id);
+      if (player) {
+        player.connected = false;
+        player.disconnectAt = Date.now();
         game.lastActivity = Date.now();
-
-        io.to(game.gameId).emit('message', {
-          message: `Player ${removedPlayer.name} left the game`,
-          players: game.players.map((p) => p.name),
-        });
-        console.log(`Player ${removedPlayer.name} removed from game ${game.gameId}`);
+        console.log(`Player ${player.name} temporarily disconnected from game ${game.gameId}`);
       }
     });
   });

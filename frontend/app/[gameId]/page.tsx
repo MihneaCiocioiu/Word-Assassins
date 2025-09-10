@@ -17,63 +17,91 @@ export default function GamePage() {
     const socket = getSocket();
 
     useEffect(() => {
-        // Retrieve player name and joined flag from local storage
         const storedName = localStorage.getItem('playerName');
         const storedPlayers = localStorage.getItem('players');
-        const alreadyJoined = localStorage.getItem('joined') === 'true';
+        const storedTarget = localStorage.getItem('target');
+        const storedWord = localStorage.getItem('word');
 
         if (storedName) {
             setPlayerName(storedName);
-
-            if (storedPlayers) {
-                setPlayers(JSON.parse(storedPlayers)); // Initialize the player list
-            }
-
-            if (!alreadyJoined) {
-                sendMessage('joinGame', { player: storedName, gameId });
-                localStorage.setItem('joined', 'true'); // Mark as joined after sending
-            }
-
             setJoined(true);
         }
 
-        // Listen for server messages
-        socket.on('message', (data) => {
-            if (data.players) {
-                setPlayers(data.players); // Update the player list
+        if (storedPlayers) {
+            try {
+                setPlayers(JSON.parse(storedPlayers));
+            } catch {}
+        }
+
+        if (storedTarget && storedWord) {
+            setTarget(storedTarget);
+            setWord(storedWord);
+        }
+
+        const rejoin = () => {
+            if (storedName) {
+                sendMessage('joinGame', { player: storedName, gameId });
+                localStorage.setItem('joined', 'true');
             }
-            if (data.message === 'Player already in game') {
-                localStorage.removeItem('joined');
-                alert('There is already a player with that name in the game. Please choose a different name and try again.');
-                setPlayerName('');
-                setJoined(false);
+        };
+
+        // Immediately rejoin if already connected
+        if (socket.connected) {
+            rejoin();
+        }
+
+        socket.on('connect', rejoin);
+
+        // Listen for server messages
+        type ServerMessage = {
+            result?: string;
+            message?: string;
+            players?: string[];
+            action?: 'countdown' | 'gameStarted';
+            countdown?: number;
+            target?: string;
+            word?: string;
+        };
+
+        const onMessage = (data: ServerMessage) => {
+            if (data.players) {
+                setPlayers(data.players);
+                localStorage.setItem('players', JSON.stringify(data.players));
             }
             if (data.action === 'countdown') {
-                setCountdown(data.countdown);
-                const interval = setInterval(() => {
-                    setCountdown((prev) => (prev ? prev - 1 : null));
-                }, 1000);
-                setTimeout(() => {
-                    clearInterval(interval);
-                    setCountdown(null); // Clear countdown after it finishes
-                }, data.countdown * 1000);
+                const cd = typeof data.countdown === 'number' ? data.countdown : null;
+                setCountdown(cd);
+                if (cd !== null) {
+                    const interval = setInterval(() => {
+                        setCountdown((prev) => (prev && prev > 0 ? prev - 1 : null));
+                    }, 1000);
+                    setTimeout(() => {
+                        clearInterval(interval);
+                        setCountdown(null);
+                    }, cd * 1000);
+                }
             }
             if (data.action === 'gameStarted') {
-                setTarget(data.target);
-                setWord(data.word);
+                if (typeof data.target === 'string' && typeof data.word === 'string') {
+                    setTarget(data.target);
+                    setWord(data.word);
+                    localStorage.setItem('target', data.target);
+                    localStorage.setItem('word', data.word);
+                }
             }
-        });
+        };
 
-        // Check if the player is the host
+        socket.on('message', onMessage);
+
         if (localStorage.getItem('isHost') === 'true') {
             setIsHost(true);
         }
 
-        // Cleanup socket listeners on unmount
         return () => {
-            socket.off('message');
+            socket.off('message', onMessage);
+            socket.off('connect', rejoin);
         };
-    }, [gameId]);
+    }, [gameId, socket]);
 
     const handleStartGame = () => {
         sendMessage('startGame', { player: playerName, gameId });

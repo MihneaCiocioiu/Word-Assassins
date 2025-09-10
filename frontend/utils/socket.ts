@@ -14,6 +14,11 @@ const getSocket = (): Socket => {
     socket = io(SOCKET_URL, {
       // If you want to strictly use WebSockets only:
       transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 2000,
+      timeout: 10000,
 
       // If your backend uses a custom path:
       // path: '/socket.io',
@@ -28,6 +33,14 @@ const getSocket = (): Socket => {
 
     socket.on('disconnect', () => {
       console.log('Disconnected from WebSocket server');
+    });
+
+    socket.on('reconnect_attempt', (attempt) => {
+      console.log('Reconnecting to WebSocket server, attempt', attempt);
+    });
+
+    socket.on('reconnect', (attempt) => {
+      console.log('Reconnected to WebSocket server after', attempt, 'attempts');
     });
   }
   return socket;
