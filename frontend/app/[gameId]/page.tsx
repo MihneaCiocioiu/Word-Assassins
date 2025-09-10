@@ -81,8 +81,9 @@ export default function GamePage() {
 
     return (
         <div className="mainSection">
-            <div className="mainBlock">
-                <span>Game ID: {gameId}</span>
+            <div className="secondaryBlock">
+                <div className='normalText'>Game ID</div>
+                <div className="mt-1"><span>{String(gameId)}</span></div>
             </div>
             {!joined ? (
                 <div className="mainSection">
@@ -125,10 +126,12 @@ export default function GamePage() {
                     {!countdown && target && word && (
                         <div className="secondaryBlock">
                             <div className='mainBlock'>
-                                <div className='normalText'>Your Target: <span>{target}</span></div>
+                                <div className='normalText'>Your Target</div>
+                                <div className='mt-1'><span>{target}</span></div>
                             </div>
                             <div className='mainBlock'>
-                                <div className='normalText'>Your Word: <span>{word}</span></div>
+                                <div className='normalText'>Your Word</div>
+                                <div className='mt-1'><span>{word}</span></div>
                             </div>
                         </div>
                     )}

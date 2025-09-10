@@ -16,7 +16,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm ci && tsc",
-    "postbuild": "cp src/words.json dist/",
+    "postbuild": "cp src/words.json dist/ && cp src/words_en.json dist/",
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts"
   },

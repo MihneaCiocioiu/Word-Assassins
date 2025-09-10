@@ -9,7 +9,9 @@ export default function RootLayout({
         <html lang="en">
             <body>
                 <header>
-                    <h1>Word Assassins</h1>
+                    <div className="max-w-3xl mx-auto px-4">
+                        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Word Assassins</h1>
+                    </div>
                 </header>
                 <main>{children}</main>
             </body>

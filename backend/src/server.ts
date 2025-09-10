@@ -20,6 +20,7 @@ interface Game {
   started: boolean;
   startTime?: number;    // Timestamp when the game started
   lastActivity: number; // Timestamp of last game-related activity
+  language: 'ro' | 'en';
 }
 
 const app = express();
@@ -75,9 +76,16 @@ setInterval(() => {
   }
 }, 30_000); // Checks every 30s (adjust as needed)
 
-// Load words
-const wordsPath = path.resolve(__dirname, './words.json');
-const words = JSON.parse(fs.readFileSync(wordsPath, 'utf8'));
+// Load words per language
+const wordsPathRo = path.resolve(__dirname, './words.json');
+const wordsPathEn = path.resolve(__dirname, './words_en.json');
+
+const wordsByLanguage: Record<'ro' | 'en', string[]> = {
+  ro: JSON.parse(fs.readFileSync(wordsPathRo, 'utf8')),
+  en: fs.existsSync(wordsPathEn)
+    ? JSON.parse(fs.readFileSync(wordsPathEn, 'utf8'))
+    : [],
+};
 
 type MessageData = {
   action: string;
@@ -92,7 +100,7 @@ io.on('connection', (socket: Socket) => {
     const { action, ...payload } = data;
 
     if (action === 'createGame') {
-      const { player } = payload;
+      const { player, language } = payload;
       const gameId = Math.random().toString(36).substr(2, 5).toUpperCase();
 
       games[gameId] = {
@@ -101,6 +109,7 @@ io.on('connection', (socket: Socket) => {
         host: player,
         started: false,
         lastActivity: Date.now(), // Record first activity
+        language: (language === 'en' || language === 'ro') ? language : 'ro',
       };
 
       socket.join(gameId);
@@ -171,14 +180,17 @@ io.on('connection', (socket: Socket) => {
           const shuffledPlayers = game.players.sort(() => Math.random() - 0.5);
       
           // Assign targets and words
-          const usedWords = new Set();
+          const usedWords = new Set<string>();
+          const wordList = (game.language && wordsByLanguage[game.language]?.length)
+            ? wordsByLanguage[game.language]
+            : wordsByLanguage['ro'];
           for (let i = 0; i < shuffledPlayers.length; i++) {
             const targetIndex = (i + 1) % shuffledPlayers.length;
             const target = shuffledPlayers[targetIndex].name;
       
             let word;
             do {
-              word = words[Math.floor(Math.random() * words.length)];
+              word = wordList[Math.floor(Math.random() * wordList.length)];
             } while (usedWords.has(word));
             usedWords.add(word);
       

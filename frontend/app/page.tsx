@@ -7,6 +7,7 @@ import getSocket, { sendMessage } from '../utils/socket';
 export default function Lobby() {
     const [playerName, setPlayerName] = useState('');
     const [gameId, setGameId] = useState('');
+    const [languageIndex, setLanguageIndex] = useState(0); // 0 = EN, 1 = RO
     const router = useRouter();
 
     const socket = getSocket(); // Reuse the singleton WebSocket instance
@@ -22,7 +23,8 @@ export default function Lobby() {
             return;
         }
 
-        sendMessage('createGame', { player: playerName });
+        const language = languageIndex === 0 ? 'en' : 'ro';
+        sendMessage('createGame', { player: playerName, language });
 
         socket.once('message', (response) => {
             if (response.result === 'OK') {
@@ -61,27 +63,41 @@ export default function Lobby() {
 
     return (
         <div className='mainSection'>
-            <input
-                type="text"
-                placeholder="Enter your name"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-            />
+            <div className='secondaryBlock'>
+                <label className='normalText block'>Your Name</label>
+                <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                />
+            </div>
 
-            <button className='secondary-button' onClick={handleCreateGame}>
-                Create Game
-            </button>
+            <div className='secondaryBlock'>
+                <div className='normalText'>Language: <span>{languageIndex === 0 ? 'English' : 'Romanian'}</span></div>
+                <select
+                    value={languageIndex}
+                    onChange={(e) => setLanguageIndex(Number(e.target.value))}
+                    className='select'
+                >
+                    <option value={0}>English</option>
+                    <option value={1}>Romanian</option>
+                </select>
+            </div>
 
-            <input
-                type="text"
-                placeholder="Enter game ID"
-                value={gameId}
-                onChange={(e) => setGameId(e.target.value)}
-            />
+            <button onClick={handleCreateGame}>Create Game</button>
 
-            <button onClick={handleJoinGame}>
-                Join Game
-            </button>
+            <div className='secondaryBlock'>
+                <label className='normalText block'>Game ID</label>
+                <input
+                    type="text"
+                    placeholder="Enter game ID"
+                    value={gameId}
+                    onChange={(e) => setGameId(e.target.value)}
+                />
+            </div>
+
+            <button onClick={handleJoinGame}>Join Game</button>
         </div>
     );
 }

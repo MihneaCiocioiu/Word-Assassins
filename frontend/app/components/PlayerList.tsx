@@ -7,15 +7,20 @@ interface PlayerListProps {
 const PlayerList: React.FC<PlayerListProps> = ({ players }) => {
     return (
         <div className='secondaryBlock'>
-            <span>Players in the Game:</span>
+            <div className="flex items-baseline justify-between mb-3">
+                <span>Players</span>
+                <p className="text-sm opacity-80">{players.length}</p>
+            </div>
             {players.length === 0 ? (
-                <p>No players yet.</p>
+                <p className="opacity-80">No players yet.</p>
             ) : (
-                <ul>
-                    {players.map((player, index) => (
-                        <li key={index}>{player}</li>
-                    ))}
-                </ul>
+                <div className="max-h-64 overflow-y-auto pr-1">
+                    <ul>
+                        {players.map((player, index) => (
+                            <li key={index}>{player}</li>
+                        ))}
+                    </ul>
+                </div>
             )}
         </div>
     );

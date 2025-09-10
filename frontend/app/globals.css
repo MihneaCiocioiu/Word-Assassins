@@ -3,36 +3,35 @@ body {
 }
 
 header {
-  @apply bg-primary text-white p-4 text-center;
+  @apply bg-primary text-white px-4 py-5 sm:py-6 text-center shadow-sm;
 }
 
 main {
+  @apply max-w-3xl mx-auto px-4 py-8 sm:py-12;
 }
 
 
 
 .mainSection {
-  @apply flex flex-col items-center my-2 w-full
+  @apply flex flex-col items-center my-2 w-full gap-4 sm:gap-6;
 }
 
-span {
-  @apply text-2xl font-bold;
-}
+span { @apply text-2xl font-bold; }
 
 .mainBlock {
-  @apply bg-primary text-text py-5 px-4 m-3 rounded-xl flex-auto w-10/12;
+  @apply bg-primary text-white py-6 px-5 m-4 rounded-xl w-full shadow-sm;
 }
 
 .secondaryBlock {
-  @apply bg-secondary text-text py-5 px-4 m-3 rounded-xl flex-auto w-10/12;
+  @apply bg-secondary text-text py-6 px-5 m-4 rounded-xl w-full shadow-sm;
 }
 
 input {
-  @apply bg-secondary text-text py-4 p-2 m-2 rounded-lg w-10/12 border-0;
+  @apply bg-secondary text-text py-4 pl-3 pr-0 mt-2 rounded-lg w-full border-0 outline-none ring-1 ring-transparent focus:ring-2 focus:ring-text/30 transition;
 }
 
 button {
-  @apply bg-primary text-text text-xl font-bold py-6 m-3 rounded-xl w-11/12 border-0;
+  @apply bg-primary text-white text-xl font-bold py-5 sm:py-6 m-3 rounded-xl w-full border-0 transition shadow-sm hover:shadow-md active:scale-[0.99];
 }
 
 ul {
@@ -40,10 +39,30 @@ ul {
 }
 
 li {
-  @apply bg-primary px-4 py-3 my-2 rounded-xl text-xl text-text 
+  @apply bg-primary px-5 py-4 my-3 rounded-xl text-lg sm:text-xl text-white 
 
 }
 
 .normalText {
-  @apply text-xl text-text font-medium
+  @apply text-lg sm:text-xl text-text font-medium
+}
+
+.whiteText {
+  @apply text-lg sm:text-xl text-white font-medium
+}
+
+.countdown {
+  @apply text-3xl sm:text-4xl font-extrabold tracking-tight text-text my-8;
+}
+
+/* Custom select */
+.select {
+  @apply bg-secondary text-text py-4 pl-3 pr-10 mt-2 rounded-lg w-full border-0 outline-none ring-1 ring-transparent focus:ring-2 focus:ring-text/30 transition;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'><path d='M6 8l4 4 4-4' stroke='%230f172a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 1rem;
 }
